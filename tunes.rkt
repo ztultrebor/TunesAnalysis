@@ -12,22 +12,22 @@
 ; – '()
 ; – (cons Track LTracks)
 (define (is-ltracks? ls)
-    (or
-     (empty? ls)
-     (and
-      (is-track? (first ls))
-      (is-ltracks? (rest ls)))))
+  (or
+   (empty? ls)
+   (and
+    (is-track? (first ls))
+    (is-ltracks? (rest ls)))))
 ; checks
 (check-expect (is-ltracks? '()) #t)
 (check-expect (is-ltracks? TAKEIT) #t)
 (check-expect (is-ltracks? (list IAM
-                         (create-date 1976 12 19 12 35 33))) #f)
+                                 (create-date 1976 12 19 12 35 33))) #f)
 #;
-(define (fn-on-ltracks sl)
+(define (fn-on-ltracks ltr)
   (cond
-    [(not (is-ltracks? ls)) (error "not a ListOfTracks")]
-    [(empty? ls) ...]
-     [else (fn-on-track (first ls)) ... (fn-on-ltracks (rest ls))]))
+    [(not (is-ltracks? ltr)) (error "not a ListOfTracks")]
+    [(empty? ltr) ...]
+    [else (fn-on-track (first ltr)) ... (fn-on-ltracks (rest ltr))]))
 
 
 ; A Track is a structure:
@@ -36,35 +36,35 @@
 ; artist, to which album it belongs, its playing time in milliseconds, its
 ; position within the album, the date it was added, how often it has been
 ; played, and the date when it was last played
-(define (is-track? s)
+(define (is-track? tr)
   (and
-   (track? s)
-   (string? (track-name s))
-   (string? (track-artist s))
-   (string? (track-album s))
-   (is-natural? (track-time s))
-   (is-natural? (track-track# s))
-   (is-date? (track-added s))
-   (is-natural? (track-play# s))
-   (is-date? (track-played s))))
+   (track? tr)
+   (string? (track-name tr))
+   (string? (track-artist tr))
+   (string? (track-album tr))
+   (is-natural? (track-time tr))
+   (is-natural? (track-track# tr))
+   (is-date? (track-added tr))
+   (is-natural? (track-play# tr))
+   (is-date? (track-played tr))))
 ; checks
 (check-expect (is-track? IAM) #t)
 (check-expect (is-track? (create-track 77 "Budd" "Take It!" 34567 9
-                                   MILLENNIUM 567 TODAY)) #f)
+                                       MILLENNIUM 567 TODAY)) #f)
 (check-expect (is-track? (create-track  "I am" "Budd" "Take It!" 34567 9
-                                    19761222 567 TODAY)) #f)
+                                        19761222 567 TODAY)) #f)
 #;
-(define (fn-on-track s)
+(define (fn-on-track tr)
   (cond
-    [(not (is-track? s)) (error "not a Track")]
-    [else ... (fn-on-string (track-name s))
-          ... (fn-on-string (track-artist s))
-          ... (fn-on-string (track-album s))
-          ... (fn-on-natural (track-time s))
-          ... (fn-on-natural (track-track# s))
-          ... (fn-on-date (track-added s))
-          ... (fn-on-natural (track-play# s))
-          ... (fn-on-date (track-played s))]))
+    [(not (is-track? tr)) (error "not a Track")]
+    [else ... (fn-on-string (track-name tr))
+          ... (fn-on-string (track-artist tr))
+          ... (fn-on-string (track-album tr))
+          ... (fn-on-natural (track-time tr))
+          ... (fn-on-natural (track-track# tr))
+          ... (fn-on-date (track-added tr))
+          ... (fn-on-natural (track-play# tr))
+          ... (fn-on-date (track-played tr))]))
 
 
 ; A Date is a structure:
@@ -73,15 +73,15 @@
 ; the date's year, month (between 1 and 12 inclusive),
 ; day (between 1 and 31), hour (between 0 and 23), minute (between 0 and 59),
 ; and second (also between 0 and 59).
-(define (is-date? dt)
+(define (is-date? d)
   (and
-   (date? dt)
-   (is-natural? (date-year dt))
-   (is-natural? (date-month dt))
-   (is-natural? (date-day dt))
-   (is-natural? (date-hour dt))
-   (is-natural? (date-minute dt))
-   (is-natural? (date-second dt))))
+   (date? d)
+   (is-natural? (date-year d))
+   (is-natural? (date-month d))
+   (is-natural? (date-day d))
+   (is-natural? (date-hour d))
+   (is-natural? (date-minute d))
+   (is-natural? (date-second d))))
 ; checks
 (check-expect (is-date?  TODAY) #t)
 (check-expect (is-date? (create-date 2023 12 19 -12 35 33)) #f)
@@ -89,15 +89,15 @@
 (check-expect (is-date? (create-date 2023 12 19 12 35 "now")) #f)
 (check-expect (is-date? 2023) #f)
 #;
-(define (fn-on-date dt)
+(define (fn-on-date d)
   (cond
-    [(not (is-date? dt)) (error "not a Date")]
-    [else ... (fn-on-natural (date-year dt))
-          ... (fn-on-natural (date-month dt))
-          ... (fn-on-natural (date-day dt))
-          ... (fn-on-natural (date-hour dt))
-          ... (fn-on-natural (date-minute dt))
-          ... (fn-on-natural (date-second dt))]))
+    [(not (is-date? d)) (error "not a Date")]
+    [else ... (fn-on-natural (date-year d))
+          ... (fn-on-natural (date-month d))
+          ... (fn-on-natural (date-day d))
+          ... (fn-on-natural (date-hour d))
+          ... (fn-on-natural (date-minute d))
+          ... (fn-on-natural (date-second d))]))
 
 
 ; An Natural is one of:
@@ -128,7 +128,28 @@
 
 ; functions
 
+(define (total-track-time tr)
+  ; Track -> Natural
+  ; computes the total amount of time spent listening to a given track.
+  ; Multiply number of plays by track length
+  (*  (track-time tr) (track-play# tr)))
+;checks
+(check-expect (total-track-time IAM) (* (track-time IAM) (track-play# IAM)))
 
+
+(define (total-time ltr)
+  ; ListOfTracks -> Natural
+  ; computes the total amount of time spent listening to a music library.
+  ; Multiply number of plays by track length for each Track in the
+  ; ListOfTracks and suns the total
+  (cond
+    [(empty? ltr) 0]
+    [else (+ (total-track-time (first ltr)) (total-time (rest ltr)))]))
+; checks
+(check-expect (total-time TAKEIT)
+              (+ (* (track-time IAM) (track-play# IAM))
+                 (* (track-time ZUZZAH) (track-play# ZUZZAH))
+                 (* (track-time THANKYE) (track-play# THANKYE))))
 
 ; constants
 
@@ -136,11 +157,11 @@
 (define TODAY (create-date 2023 12 19 12 35 33))
 (define MILLENNIUM (create-date 2000 01 01 00 00 00))
 (define IAM (create-track "I am" "Budd" "Take It!"
-                             34567 9 MILLENNIUM 567 TODAY))
+                          34567 9 MILLENNIUM 567 TODAY))
 (define ZUZZAH (create-track "Zuzzah!" "Budd" "Take It!"
-                                144567 12 MILLENNIUM 1 MILLENNIUM))
+                             144567 12 MILLENNIUM 1 MILLENNIUM))
 (define THANKYE (create-track "Thank Ye" "Budd" "Take It!"
-                                9778 13 MILLENNIUM 177 TODAY))
+                              9778 13 MILLENNIUM 177 TODAY))
 (define TAKEIT (list IAM ZUZZAH THANKYE))
 
 
@@ -149,4 +170,4 @@
 
 (define itunes-tracks (read-itunes-as-tracks ITUNES-LOCATION))
 
-itunes-tracks
+(total-time itunes-tracks)

@@ -7,7 +7,6 @@
 
 ; data definitions
 
-
 ; An LTracks is one of:
 ; – '()
 ; – (cons Track LTracks)
@@ -19,7 +18,7 @@
     (is-ltracks? (rest ls)))))
 ; checks
 (check-expect (is-ltracks? '()) #t)
-(check-expect (is-ltracks? TAKEIT) #t)
+(check-expect (is-ltracks? TUNES) #t)
 (check-expect (is-ltracks? (list IAM
                                  (create-date 1976 12 19 12 35 33))) #f)
 #;
@@ -146,10 +145,70 @@
     [(empty? ltr) 0]
     [else (+ (total-track-time (first ltr)) (total-time (rest ltr)))]))
 ; checks
-(check-expect (total-time TAKEIT)
+(check-expect (total-time TUNES)
               (+ (* (track-time IAM) (track-play# IAM))
                  (* (track-time ZUZZAH) (track-play# ZUZZAH))
-                 (* (track-time THANKYE) (track-play# THANKYE))))
+                 (* (track-time THANKYE) (track-play# THANKYE))
+                 (* (track-time MYRULES) (track-play# MYRULES))))
+
+
+(define (select-all-album-titles ltr)
+  ; ListOfTracks -> ListOfStrings
+  ; generates a list of all album titles in the ListOfTracks
+  (cond
+    [(empty? ltr) '()]
+    [else (push-to-set (track-album (first ltr))
+                (select-all-album-titles (rest ltr)))]))
+; checks
+(check-satisfied (list (select-all-album-titles TUNES)
+              (list "Take It!" "Rizz Monsters")) same-set?)
+
+
+(define (push-to-set ele lst)
+  ; Any ListOfAny -> ListOfAny
+  ; adds an element to a set; a list in which no items repeat.
+  ; assumes the list provided qualifies as a set
+  (cond
+    [(empty? lst) (list ele)]
+    [(equal? ele (first lst)) lst]
+    [else (cons (first lst) (push-to-set ele (rest lst)))]))
+;checks
+(check-expect (push-to-set "c" (list "a" "b")) (list "a" "b" "c"))
+(check-expect (push-to-set "c" (list "a" "b" "c")) (list "a" "b" "c"))
+
+
+(define (create-set lst1 lst2)
+  ; Any ListOfAny -> ListOfAny
+  ; merges two lists into a set; a list in which no items repeat.
+  ; assumes the both lists provided qualify as sets
+(cond
+    [(empty? lst1) lst2]
+    [else (push-to-set (first lst1) (create-set (rest lst1) lst2))]))
+;checks
+(check-satisfied (list (create-set (list "a" "b" "c") (list "a" "b" "c"))
+              (list "a" "b" "c")) same-set?)
+(check-satisfied (list (create-set (list "a" "b" "c") (list "d" "e" "f"))
+              (list "a" "b" "c" "d" "e" "f")) same-set?)
+
+
+(define (equivalent? s1 s2)
+  ; ListOfAny ListOfAny -> Boolean
+  ; determines if two lists are in fact the same set
+  (and (equal? s2 (create-set s1 s2)) (equal? s1 (create-set s2 s1))))
+;checks
+(check-expect (equivalent? (list "a" "b" "c") (list "a" "b" "c")) #t)
+(check-expect (equivalent? (list "a" "c" "b") (list "a" "b" "c")) #t)
+(check-expect (equivalent? (list "a" "b") (list "a" "b" "c")) #f)
+(check-expect (equivalent? (list "a" "b" "d") (list "a" "b" "c")) #f)
+(check-expect (equivalent? (list "c" "b" "d") (list "a" "d" "b")) #f)
+
+
+(define (same-set? los)
+  ; ListOfSets -> Boolean
+  ; variant of equivalent? for use in check-satisfied
+  (equivalent? (first los) (second los)))
+  
+
 
 ; constants
 
@@ -162,7 +221,9 @@
                              144567 12 MILLENNIUM 1 MILLENNIUM))
 (define THANKYE (create-track "Thank Ye" "Budd" "Take It!"
                               9778 13 MILLENNIUM 177 TODAY))
-(define TAKEIT (list IAM ZUZZAH THANKYE))
+(define MYRULES (create-track "My Rules" "J17" "Rizz Monsters"
+                              10098 4 TODAY 76 TODAY))
+(define TUNES (list IAM ZUZZAH THANKYE MYRULES))
 
 
 
@@ -171,3 +232,5 @@
 (define itunes-tracks (read-itunes-as-tracks ITUNES-LOCATION))
 
 (total-time itunes-tracks)
+
+(select-all-album-titles itunes-tracks)

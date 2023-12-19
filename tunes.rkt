@@ -8,98 +8,96 @@
 ; data definitions
 
 
-; An LSongs is one of:
+; An LTracks is one of:
 ; – '()
-; – (cons Song LSongs)
-(define (is-lsongs? ls)
+; – (cons Track LTracks)
+(define (is-ltracks? ls)
     (or
      (empty? ls)
      (and
-      (is-song? (first ls))
-      (is-lsongs? (rest ls)))))
+      (is-track? (first ls))
+      (is-ltracks? (rest ls)))))
 ; checks
-(check-expect (is-lsongs? '()) #t)
-(check-expect (is-lsongs? TAKEIT) #t)
-(check-expect (is-lsongs? (list IAM
-                         (make-date-time 1976 12 19 12 35 33))) #f)
+(check-expect (is-ltracks? '()) #t)
+(check-expect (is-ltracks? TAKEIT) #t)
+(check-expect (is-ltracks? (list IAM
+                         (create-date 1976 12 19 12 35 33))) #f)
 #;
-(define (fn-on-lsongs sl)
+(define (fn-on-ltracks sl)
   (cond
-    [(not (is-lsongs? ls)) (error "not a ListOfSongs")]
+    [(not (is-ltracks? ls)) (error "not a ListOfTracks")]
     [(empty? ls) ...]
-     [else (fn-on-song (first ls)) ... (fn-on-lsongs (rest ls))]))
+     [else (fn-on-track (first ls)) ... (fn-on-ltracks (rest ls))]))
 
 
-(define-struct song [name artist album time song# added play# played])
-; A Song is a structure:
-;   (make-song String String String Natural Natural DateTime Natural DateTime)
-; interpretation An instance records in order: the song's  title,its producing
+; A Track is a structure:
+;   (make-track String String String Natural Natural Date Natural Date)
+; interpretation An instance records in order: the Track's  title,its producing
 ; artist, to which album it belongs, its playing time in milliseconds, its
-; position within the album, the date-time it was added, how often it has been
-; played, and the date-time when it was last played
-(define (is-song? s)
+; position within the album, the date it was added, how often it has been
+; played, and the date when it was last played
+(define (is-track? s)
   (and
-   (song? s)
-   (string? (song-name s))
-   (string? (song-artist s))
-   (string? (song-album s))
-   (is-natural? (song-time s))
-   (is-natural? (song-song# s))
-   (is-date-time? (song-added s))
-   (is-natural? (song-play# s))
-   (is-date-time? (song-played s))))
+   (track? s)
+   (string? (track-name s))
+   (string? (track-artist s))
+   (string? (track-album s))
+   (is-natural? (track-time s))
+   (is-natural? (track-track# s))
+   (is-date? (track-added s))
+   (is-natural? (track-play# s))
+   (is-date? (track-played s))))
 ; checks
-(check-expect (is-song? IAM) #t)
-(check-expect (is-song? (make-song 77 "Budd" "Take It!" 34567 9
+(check-expect (is-track? IAM) #t)
+(check-expect (is-track? (create-track 77 "Budd" "Take It!" 34567 9
                                    MILLENNIUM 567 TODAY)) #f)
-(check-expect (is-song? (make-song  "I am" "Budd" "Take It!" 34567 9
+(check-expect (is-track? (create-track  "I am" "Budd" "Take It!" 34567 9
                                     19761222 567 TODAY)) #f)
 #;
-(define (fn-on-song s)
+(define (fn-on-track s)
   (cond
-    [(not (is-song? s)) (error "not a Song")]
-    [else ... (fn-on-string (song-name s))
-          ... (fn-on-string (song-artist s))
-          ... (fn-on-string (song-album s))
-          ... (fn-on-natural (song-time s))
-          ... (fn-on-natural (song-song# s))
-          ... (fn-on-date-time (song-added s))
-          ... (fn-on-natural (song-play# s))
-          ... (fn-on-date-time (song-played s))]))
+    [(not (is-track? s)) (error "not a Track")]
+    [else ... (fn-on-string (track-name s))
+          ... (fn-on-string (track-artist s))
+          ... (fn-on-string (track-album s))
+          ... (fn-on-natural (track-time s))
+          ... (fn-on-natural (track-track# s))
+          ... (fn-on-date (track-added s))
+          ... (fn-on-natural (track-play# s))
+          ... (fn-on-date (track-played s))]))
 
 
-(define-struct date-time [year month day hour minute second])
-; A DateTime is a structure:
-;   (make-date-time-time Natural Natural Natural Natural Natural Natural)
+; A Date is a structure:
+;   (create-date Natural Natural Natural Natural Natural Natural)
 ; interpretation An instance records six pieces of information:
-; the date-time's year, month (between 1 and 12 inclusive),
+; the date's year, month (between 1 and 12 inclusive),
 ; day (between 1 and 31), hour (between 0 and 23), minute (between 0 and 59),
 ; and second (also between 0 and 59).
-(define (is-date-time? dt)
+(define (is-date? dt)
   (and
-   (date-time? dt)
-   (is-natural? (date-time-year dt))
-   (is-natural? (date-time-month dt))
-   (is-natural? (date-time-day dt))
-   (is-natural? (date-time-hour dt))
-   (is-natural? (date-time-minute dt))
-   (is-natural? (date-time-second dt))))
+   (date? dt)
+   (is-natural? (date-year dt))
+   (is-natural? (date-month dt))
+   (is-natural? (date-day dt))
+   (is-natural? (date-hour dt))
+   (is-natural? (date-minute dt))
+   (is-natural? (date-second dt))))
 ; checks
-(check-expect (is-date-time?  TODAY) #t)
-(check-expect (is-date-time? (make-date-time 2023 12 19 -12 35 33)) #f)
-(check-expect (is-date-time? (make-date-time 2023.0 12 19 12 35 33)) #t)
-(check-expect (is-date-time? (make-date-time 2023 12 19 12 35 "now")) #f)
-(check-expect (is-date-time? 2023) #f)
+(check-expect (is-date?  TODAY) #t)
+(check-expect (is-date? (create-date 2023 12 19 -12 35 33)) #f)
+(check-expect (is-date? (create-date 2023.0 12 19 12 35 33)) #t)
+(check-expect (is-date? (create-date 2023 12 19 12 35 "now")) #f)
+(check-expect (is-date? 2023) #f)
 #;
-(define (fn-on-date-time dt)
+(define (fn-on-date dt)
   (cond
-    [(not (is-date-time? dt)) (error "not a DateTime")]
-    [else ... (fn-on-natural (date-time-year dt))
-          ... (fn-on-natural (date-time-month dt))
-          ... (fn-on-natural (date-time-day dt))
-          ... (fn-on-natural (date-time-hour dt))
-          ... (fn-on-natural (date-time-minute dt))
-          ... (fn-on-natural (date-time-second dt))]))
+    [(not (is-date? dt)) (error "not a Date")]
+    [else ... (fn-on-natural (date-year dt))
+          ... (fn-on-natural (date-month dt))
+          ... (fn-on-natural (date-day dt))
+          ... (fn-on-natural (date-hour dt))
+          ... (fn-on-natural (date-minute dt))
+          ... (fn-on-natural (date-second dt))]))
 
 
 ; An Natural is one of:
@@ -130,38 +128,18 @@
 
 ; functions
 
-(define (create-song name artist album time song# added play# played)
-  ; Any Any Any Any Any Any Any Any -> Song or #false
-  ; creates an instance of Song for legitimate inputs,
-  ; otherwise it produces #false
-  ...)
-
-
-(define (create-date-time y mo day h m s)
-  ; Any Any Any Any Any Any -> DateTime or #false
-  ; creates an instance of DateTime for legitimate inputs 
-  ; otherwise it produces #false
-  ...)
-
-
-#(define (read-itunes-as-songs file-name)
-   ; String -> LSongs
-   ; creates a list-of-songs representation from the
-   ; text in file-name (an XML export from iTunes)
-   ...)
 
 
 ; constants
 
 (define ITUNES-LOCATION "Library.xml")
-; (define itunes-songs (read-itunes-as-songs ITUNES-LOCATION))
-(define TODAY (make-date-time 2023 12 19 12 35 33))
-(define MILLENNIUM (make-date-time 2000 01 01 00 00 00))
-(define IAM (make-song "I am" "Budd" "Take It!"
+(define TODAY (create-date 2023 12 19 12 35 33))
+(define MILLENNIUM (create-date 2000 01 01 00 00 00))
+(define IAM (create-track "I am" "Budd" "Take It!"
                              34567 9 MILLENNIUM 567 TODAY))
-(define ZUZZAH (make-song "Zuzzah!" "Budd" "Take It!"
+(define ZUZZAH (create-track "Zuzzah!" "Budd" "Take It!"
                                 144567 12 MILLENNIUM 1 MILLENNIUM))
-(define THANKYE (make-song "Thank Ye" "Budd" "Take It!"
+(define THANKYE (create-track "Thank Ye" "Budd" "Take It!"
                                 9778 13 MILLENNIUM 177 TODAY))
 (define TAKEIT (list IAM ZUZZAH THANKYE))
 
@@ -169,3 +147,6 @@
 
 ;actions!
 
+(define itunes-tracks (read-itunes-as-tracks ITUNES-LOCATION))
+
+itunes-tracks

@@ -19,22 +19,8 @@
       (is-lsongs? (rest ls)))))
 ; checks
 (check-expect (is-lsongs? '()) #t)
-(check-expect (is-lsongs? (list (make-song
-                         "I am" "Budd" "Take It!" 34567 9
-                         (make-date-time 1976 12 19 12 35 33)
-                         567 (make-date-time 2023 12 19 12 35 33)))) #t)
-(check-expect (is-lsongs? (list (make-song
-                         "I am" "Budd" "Take It!" 34567 9
-                         (make-date-time 1976 12 19 12 35 33)
-                         567 (make-date-time 2023 12 19 12 35 33))
-                                (make-song
-                         "Zuzzah!" "Budd" "Take It!" 144567 12
-                         (make-date-time 1976 12 19 12 35 33)
-                         1 (make-date-time 2003 12 19 12 35 33)))) #t)
-(check-expect (is-lsongs? (list (make-song
-                         "I am" "Budd" "Take It!" 34567 9
-                         (make-date-time 1976 12 19 12 35 33)
-                         567 (make-date-time 2023 12 19 12 35 33))
+(check-expect (is-lsongs? TAKEIT) #t)
+(check-expect (is-lsongs? (list IAM
                          (make-date-time 1976 12 19 12 35 33))) #f)
 #;
 (define (fn-on-lsongs sl)
@@ -63,18 +49,11 @@
    (is-natural? (song-play# s))
    (is-date-time? (song-played s))))
 ; checks
-(check-expect (is-song? (make-song
-                         "I am" "Budd" "Take It!" 34567 9
-                         (make-date-time 1976 12 19 12 35 33)
-                         567 (make-date-time 2023 12 19 12 35 33))) #t)
-(check-expect (is-song? (make-song
-                         77 "Budd" "Take It!" 34567 9
-                         (make-date-time 1976 12 19 12 35 33)
-                         567 (make-date-time 2023 12 19 12 35 33))) #f)
-(check-expect (is-song? (make-song
-                         "I am" "Budd" "Take It!" 34567 9
-                         19761222 567
-                         (make-date-time 2023 12 19 12 35 33))) #f)
+(check-expect (is-song? IAM) #t)
+(check-expect (is-song? (make-song 77 "Budd" "Take It!" 34567 9
+                                   MILLENNIUM 567 TODAY)) #f)
+(check-expect (is-song? (make-song  "I am" "Budd" "Take It!" 34567 9
+                                    19761222 567 TODAY)) #f)
 #;
 (define (fn-on-song s)
   (cond
@@ -106,7 +85,7 @@
    (is-natural? (date-time-minute dt))
    (is-natural? (date-time-second dt))))
 ; checks
-(check-expect (is-date-time? (make-date-time 2023 12 19 12 35 33)) #t)
+(check-expect (is-date-time?  TODAY) #t)
 (check-expect (is-date-time? (make-date-time 2023 12 19 -12 35 33)) #f)
 (check-expect (is-date-time? (make-date-time 2023.0 12 19 12 35 33)) #t)
 (check-expect (is-date-time? (make-date-time 2023 12 19 12 35 "now")) #f)
@@ -176,8 +155,15 @@
 
 (define ITUNES-LOCATION "Library.xml")
 ; (define itunes-songs (read-itunes-as-songs ITUNES-LOCATION))
-
-
+(define TODAY (make-date-time 2023 12 19 12 35 33))
+(define MILLENNIUM (make-date-time 2000 01 01 00 00 00))
+(define IAM (make-song "I am" "Budd" "Take It!"
+                             34567 9 MILLENNIUM 567 TODAY))
+(define ZUZZAH (make-song "Zuzzah!" "Budd" "Take It!"
+                                144567 12 MILLENNIUM 1 MILLENNIUM))
+(define THANKYE (make-song "Thank Ye" "Budd" "Take It!"
+                                9778 13 MILLENNIUM 177 TODAY))
+(define TAKEIT (list IAM ZUZZAH THANKYE))
 
 
 

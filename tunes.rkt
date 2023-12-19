@@ -11,12 +11,37 @@
 ; An LSongs is one of:
 ; – '()
 ; – (cons Song LSongs)
-#;(define (is-lsongs? ls)
+(define (is-lsongs? ls)
     (or
      (empty? ls)
      (and
       (is-song? (first ls))
       (is-lsongs? (rest ls)))))
+; checks
+(check-expect (is-lsongs? '()) #t)
+(check-expect (is-lsongs? (list (make-song
+                         "I am" "Budd" "Take It!" 34567 9
+                         (make-date-time 1976 12 19 12 35 33)
+                         567 (make-date-time 2023 12 19 12 35 33)))) #t)
+(check-expect (is-lsongs? (list (make-song
+                         "I am" "Budd" "Take It!" 34567 9
+                         (make-date-time 1976 12 19 12 35 33)
+                         567 (make-date-time 2023 12 19 12 35 33))
+                                (make-song
+                         "Zuzzah!" "Budd" "Take It!" 144567 12
+                         (make-date-time 1976 12 19 12 35 33)
+                         1 (make-date-time 2003 12 19 12 35 33)))) #t)
+(check-expect (is-lsongs? (list (make-song
+                         "I am" "Budd" "Take It!" 34567 9
+                         (make-date-time 1976 12 19 12 35 33)
+                         567 (make-date-time 2023 12 19 12 35 33))
+                         (make-date-time 1976 12 19 12 35 33))) #f)
+#;
+(define (fn-on-lsongs sl)
+  (cond
+    [(not (is-lsongs? ls)) (error "not a ListOfSongs")]
+    [(empty? ls) ...]
+     [else (fn-on-song (first ls)) ... (fn-on-lsongs (rest ls))]))
 
 
 (define-struct song [name artist album time song# added play# played])
@@ -26,17 +51,42 @@
 ; artist, to which album it belongs, its playing time in milliseconds, its
 ; position within the album, the date-time it was added, how often it has been
 ; played, and the date-time when it was last played
-#;(define (is-song? s)
-    (and
-     (song? s)
-     (string? (song-name s))
-     (string? (song-artist s))
-     (string? (song-album s))
-     (is-natural? (song-time s))
-     (is-natural? (song-song# s))
-     (is-date-time? (song-added s))
-     (s-natural? (song-play# s))
-     (is-date-time? (song-played s))))
+(define (is-song? s)
+  (and
+   (song? s)
+   (string? (song-name s))
+   (string? (song-artist s))
+   (string? (song-album s))
+   (is-natural? (song-time s))
+   (is-natural? (song-song# s))
+   (is-date-time? (song-added s))
+   (is-natural? (song-play# s))
+   (is-date-time? (song-played s))))
+; checks
+(check-expect (is-song? (make-song
+                         "I am" "Budd" "Take It!" 34567 9
+                         (make-date-time 1976 12 19 12 35 33)
+                         567 (make-date-time 2023 12 19 12 35 33))) #t)
+(check-expect (is-song? (make-song
+                         77 "Budd" "Take It!" 34567 9
+                         (make-date-time 1976 12 19 12 35 33)
+                         567 (make-date-time 2023 12 19 12 35 33))) #f)
+(check-expect (is-song? (make-song
+                         "I am" "Budd" "Take It!" 34567 9
+                         19761222 567
+                         (make-date-time 2023 12 19 12 35 33))) #f)
+#;
+(define (fn-on-song s)
+  (cond
+    [(not (is-song? s)) (error "not a Song")]
+    [else ... (fn-on-string (song-name s))
+          ... (fn-on-string (song-artist s))
+          ... (fn-on-string (song-album s))
+          ... (fn-on-natural (song-time s))
+          ... (fn-on-natural (song-song# s))
+          ... (fn-on-date-time (song-added s))
+          ... (fn-on-natural (song-play# s))
+          ... (fn-on-date-time (song-played s))]))
 
 
 (define-struct date-time [year month day hour minute second])

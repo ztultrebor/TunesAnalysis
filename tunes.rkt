@@ -8,33 +8,6 @@
 ; data definitions
 
 
-
-; An Natural is one of:
-; – 0
-; – (add1 Natural)
-; interpretation represents the counting numbers
-(define (is-natural? n)
-  (and
-   (real? n)
-   (or
-    (= n 0)
-    (and 
-     (>= n 0)
-     (is-natural? (sub1 n))))))
-; checks
-(check-expect (is-natural? 0) #t)
-(check-expect (is-natural? 2) #t)
-(check-expect (is-natural? pi) #f)
-(check-expect (is-natural? -2) #f)
-(check-expect (is-natural? 0+2i) #f)
-#;
-(define (fn-on-natural n)
-  (cond
-    [(not (is-natural? n)) (error "not a natural number")]
-    [(= n 0) ...]
-    [else ... (fn-on-natural (sub1 n))]))
-
-
 ; An LSongs is one of:
 ; – '()
 ; – (cons Song LSongs)
@@ -68,12 +41,62 @@
 
 (define-struct date-time [year month day hour minute second])
 ; A DateTime is a structure:
-;   (make-date-time-time N N N N N N)
+;   (make-date-time-time Natural Natural Natural Natural Natural Natural)
 ; interpretation An instance records six pieces of information:
-; the date-time's year, month (between 1 and 12 inclusive), day (between 1 and 31),
-; hour (between 0 and 23), minute (between 0 and 59),
+; the date-time's year, month (between 1 and 12 inclusive),
+; day (between 1 and 31), hour (between 0 and 23), minute (between 0 and 59),
 ; and second (also between 0 and 59).
+(define (is-date-time? dt)
+  (and
+   (date-time? dt)
+   (is-natural? (date-time-year dt))
+   (is-natural? (date-time-month dt))
+   (is-natural? (date-time-day dt))
+   (is-natural? (date-time-hour dt))
+   (is-natural? (date-time-minute dt))
+   (is-natural? (date-time-second dt))))
+; checks
+(check-expect (is-date-time? (make-date-time 2023 12 19 12 35 33)) #t)
+(check-expect (is-date-time? (make-date-time 2023 12 19 -12 35 33)) #f)
+(check-expect (is-date-time? (make-date-time 2023.0 12 19 12 35 33)) #t)
+(check-expect (is-date-time? (make-date-time 2023 12 19 12 35 "now")) #f)
+(check-expect (is-date-time? 2023) #f)
+#;
+(define (fn-on-date-time dt)
+  (cond
+    [(not (is-date-time? dt)) (error "not a DateTime")]
+    [else ... (fn-on-natural (date-time-year dt))
+          ... (fn-on-natural (date-time-month dt))
+          ... (fn-on-natural (date-time-day dt))
+          ... (fn-on-natural (date-time-hour dt))
+          ... (fn-on-natural (date-time-minute dt))
+          ... (fn-on-natural (date-time-second dt))]))
 
+
+; An Natural is one of:
+; – 0
+; – (add1 Natural)
+; interpretation represents the counting numbers
+(define (is-natural? n)
+  (and
+   (real? n)
+   (or
+    (= n 0)
+    (and 
+     (>= n 0)
+     (is-natural? (sub1 n))))))
+; checks
+(check-expect (is-natural? 0) #t)
+(check-expect (is-natural? 2) #t)
+(check-expect (is-natural? pi) #f)
+(check-expect (is-natural? -2) #f)
+(check-expect (is-natural? 0+2i) #f)
+#;
+(define (fn-on-natural n)
+  (cond
+    [(not (is-natural? n)) (error "not a natural number")]
+    [(= n 0) ...]
+    [else ... (fn-on-natural (sub1 n))]))
 
 
 ; functions

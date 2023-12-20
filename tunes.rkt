@@ -308,6 +308,51 @@
     [else (+ (total-track-time/lists (first ll)) (total-time/lists (rest ll)))]))
 
 
+(define (boolean-attributes ll)
+  ; ListOfLists -> ListOfStrings
+  ; constructs a list of all the association headers in the
+  ; list-representation that are associated with boolean values.
+  ; Output is effectively a set
+  (cond
+    [(empty? ll) '()]
+    [else (create-set (parse-list (first ll))
+                      (boolean-attributes (rest ll)))]))
+;checks
+(check-satisfied (list (boolean-attributes LISTOFLASSOC)
+                       (list "tweed" "diamondite")) same-set?)
+
+
+(define (track-as-struct lassoc)
+  ; ListOfAssociations -> Track
+  ; takes a track in ListOfAssociations format and converts it into
+  ; a Track structure, if possible
+  (create-track (find-association "Name" lassoc #f)
+                (find-association "Artist" lassoc #f)
+                (find-association "Album" lassoc #f)
+                (find-association "Total Time" lassoc #f)
+                (find-association "Track Number" lassoc #f)
+                (find-association "Date Added" lassoc #f)
+                (find-association "Play Count" lassoc #f)
+                (find-association "Date Modified" lassoc #f)))
+; checks
+(check-expect (track-as-struct MYRULESLASSOC) MYRULES)
+(check-expect (track-as-struct SALLYSUELASSOC) #f)
+
+
+(define (llassoc-to-ltr llassoc)
+  ; ListOfListOfAssociations -> ListOfTracks
+  ; takes a track library in ListOfListOfAssociations structure
+  ; and converts it into a ListOfTracks structure
+  (cond
+    [(empty? llassoc) '()]
+    [(boolean? (track-as-struct (first llassoc)))
+     (llassoc-to-ltr (rest llassoc))]
+    [else (cons (track-as-struct (first llassoc))
+                (llassoc-to-ltr (rest llassoc)))]))
+; checks
+(check-satisfied (list (llassoc-to-ltr LLASSOC) (list MYRULES)) same-set?)
+
+
 (define (total-track-time/lists l)
   ; List -> Natural
   ; computes the total amount of time spent listening to a given track.
@@ -329,29 +374,15 @@
 (check-expect (find-association "philobust" LASSOC "wut") "wut")
 
 
-(define (boolean-attributes ll)
-  ; ListOfLists -> ListOfStrings
-  ; constructs a list of all the association headers in the
-  ; list-representation that are associated with boolean values.
-  ; Output is effectively a set
-  (cond
-    [(empty? ll) '()]
-    [else (create-set (deconstruct-list (first ll))
-                      (boolean-attributes (rest ll)))]))
-;checks
-(check-satisfied (list (boolean-attributes LISTOFLASSOC)
-                       (list "tweed" "diamondite")) same-set?)
-
-
-(define (deconstruct-list l)
+(define (parse-list l)
   ; ListOfAssociations -> ListOfStrings
   ; constructs a list of all the association headers from a given track that
   ; are associated with boolean values.
   (cond
     [(empty? l) '()]
     [(boolean? (second (first l)))
-     (cons (first (first l)) (deconstruct-list (rest l)))]
-    [else (deconstruct-list (rest l))]))
+     (cons (first (first l)) (parse-list (rest l)))]
+    [else (parse-list (rest l))]))
 
 
 
@@ -391,27 +422,34 @@
                                  (list "diamondite" #t)
                                  (list "stain" TODAY)
                                  (list "tweed" "sunny"))))
+(define MYRULESLASSOC (list (list "Name" "My Rules")
+                            (list "Artist" "J17")
+                            (list "Album" "Rizz Monsters")
+                            (list "Total Time" 10098)
+                            (list "Track Number" 4)
+                            (list "Date Added" TODAY)
+                            (list "Play Count" 76)
+                            (list "Date Modified" TODAY)))
+(define SALLYSUELASSOC (list (list "Name" "Sally Sue")
+                            (list "Artist" "Budd")
+                            (list "Album" "Take It!")
+                            (list "Total Time" 22345)
+                            (list "Track Number" 8)
+                            (list "Date Added" MILLENNIUM)))
+(define LLASSOC (list MYRULESLASSOC SALLYSUELASSOC))
 
 
 
 ;actions!
 
-(define itunes-tracks (read-itunes-as-tracks ITUNES-LOCATION))
-
-(total-time itunes-tracks)
-
+;(define itunes-tracks (read-itunes-as-tracks ITUNES-LOCATION))
+;(total-time itunes-tracks)
 ;(define albums (select-all-album-titles itunes-tracks))
-  
 ;(length albums)
-
 ; (select-album  "The Queen Is Dead" itunes-tracks)
-
 ;(select-albums itunes-tracks)
 
-
-
 (define itunes-tracks/lists (read-itunes-as-lists ITUNES-LOCATION))
-
-(total-time/lists itunes-tracks/lists)
-
-(boolean-attributes itunes-tracks/lists )
+;(total-time/lists itunes-tracks/lists)
+;(boolean-attributes itunes-tracks/lists)
+(llassoc-to-ltr itunes-tracks/lists)

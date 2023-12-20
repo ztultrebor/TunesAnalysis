@@ -127,14 +127,6 @@
 
 ; functions
 
-(define (total-track-time tr)
-  ; Track -> Natural
-  ; computes the total amount of time spent listening to a given track.
-  ; Multiply number of plays by track length
-  (*  (track-time tr) (track-play# tr)))
-;checks
-(check-expect (total-track-time IAM) (* (track-time IAM) (track-play# IAM)))
-
 
 (define (total-time ltr)
   ; ListOfTracks -> Natural
@@ -158,10 +150,30 @@
   (cond
     [(empty? ltr) '()]
     [else (push-to-set (track-album (first ltr))
-                (select-all-album-titles (rest ltr)))]))
+                       (select-all-album-titles (rest ltr)))]))
 ; checks
 (check-satisfied (list (select-all-album-titles TUNES)
-              (list "Take It!" "Rizz Monsters")) same-set?)
+                       (list "Take It!" "Rizz Monsters")) same-set?)
+
+
+(define (select-album album ltr)
+  ; String ListOfTracks -> ListOfTracks
+  ; given an album title, retreive all that album's tracks in ListOfTracks
+  (cond
+    [(empty? ltr) '()]
+    [(equal? (track-album (first ltr)) album)
+     (cons (first ltr) (select-album album (rest ltr)))]
+    [else  (select-album album (rest ltr))]))
+; checks
+(check-satisfied (list (select-album "Take It!" TUNES) TAKEIT) same-set?)
+
+(define (total-track-time tr)
+  ; Track -> Natural
+  ; computes the total amount of time spent listening to a given track.
+  ; Multiply number of plays by track length
+  (*  (track-time tr) (track-play# tr)))
+;checks
+(check-expect (total-track-time IAM) (* (track-time IAM) (track-play# IAM)))
 
 
 (define (push-to-set ele lst)
@@ -181,20 +193,24 @@
   ; Any ListOfAny -> ListOfAny
   ; merges two lists into a set; a list in which no items repeat.
   ; assumes the both lists provided qualify as sets
-(cond
+  (cond
     [(empty? lst1) lst2]
     [else (push-to-set (first lst1) (create-set (rest lst1) lst2))]))
 ;checks
 (check-satisfied (list (create-set (list "a" "b" "c") (list "a" "b" "c"))
-              (list "a" "b" "c")) same-set?)
+                       (list "a" "b" "c")) same-set?)
 (check-satisfied (list (create-set (list "a" "b" "c") (list "d" "e" "f"))
-              (list "a" "b" "c" "d" "e" "f")) same-set?)
+                       (list "a" "b" "c" "d" "e" "f")) same-set?)
+(check-satisfied (list (create-set (list "a" "b" "e" "c") (list "d" "e" "f"))
+                       (list "a" "b" "c" "d" "e" "f")) same-set?)
 
 
 (define (equivalent? s1 s2)
   ; ListOfAny ListOfAny -> Boolean
   ; determines if two lists are in fact the same set
-  (and (equal? s2 (create-set s1 s2)) (equal? s1 (create-set s2 s1))))
+  (and (= (length s1) (length s2))
+       (equal? s2 (create-set s1 s2))
+       (equal? s1 (create-set s2 s1))))
 ;checks
 (check-expect (equivalent? (list "a" "b" "c") (list "a" "b" "c")) #t)
 (check-expect (equivalent? (list "a" "c" "b") (list "a" "b" "c")) #t)
@@ -223,6 +239,8 @@
                               9778 13 MILLENNIUM 177 TODAY))
 (define MYRULES (create-track "My Rules" "J17" "Rizz Monsters"
                               10098 4 TODAY 76 TODAY))
+(define TAKEIT (list IAM ZUZZAH THANKYE))
+(define RIZZMONSTERS (list MYRULES))
 (define TUNES (list IAM ZUZZAH THANKYE MYRULES))
 
 
@@ -233,4 +251,10 @@
 
 (total-time itunes-tracks)
 
-(select-all-album-titles itunes-tracks)
+(define albums (select-all-album-titles itunes-tracks))
+
+albums
+  
+(length albums)
+
+(select-album  "The Queen Is Dead" itunes-tracks)

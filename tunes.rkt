@@ -125,7 +125,7 @@
     [else ... (fn-on-natural (sub1 n))]))
 
 
-; functions
+; functions on structure-based representations
 
 
 (define (total-time ltr)
@@ -289,13 +289,73 @@
     [(empty? loati) '()]
     [else (cons (select-album (first loati) ltr)
                 (construct-album-track-list (rest loati) ltr))]))
-  ; checks
-  (check-satisfied (list (construct-album-track-list
-                          (list "Rizz Monsters" "Take It!") TUNES)
-                   (list TAKEIT RIZZMONSTERS)) same-set?)
+; checks
+(check-satisfied (list (construct-album-track-list
+                        (list "Rizz Monsters" "Take It!") TUNES)
+                       (list TAKEIT RIZZMONSTERS)) same-set?)
 
-  
-; constants
+
+; functions on list-based representations
+
+
+(define (total-time/lists ll)
+  ; ListOfLists -> Natural
+  ; computes the total amount of time spent listening to a music library.
+  ; Multiply number of plays by track length for each track in the
+  ; ListOfLists and sums the total
+  (cond
+    [(empty? ll) 0]
+    [else (+ (total-track-time/lists (first ll)) (total-time/lists (rest ll)))]))
+
+
+(define (total-track-time/lists l)
+  ; List -> Natural
+  ; computes the total amount of time spent listening to a given track.
+  ; Multiply number of plays by track length
+  (*  (find-association "Total Time" l 0) (find-association "Play Count" l 0)))
+
+
+(define (find-association key lassoc default)
+  ; String ListOfAssociations Any -> Association/Any
+  ; returns an association if the key matches an
+  ; association header, else default
+  (cond
+    [(empty? lassoc) default]
+    [(equal? (first (first lassoc)) key) (second (first lassoc))]
+    [else (find-association key (rest lassoc) default)]))
+; checks
+(check-expect (find-association "tweed" LASSOC #f) #f)
+(check-expect (find-association "stain" LASSOC #f) TODAY)
+(check-expect (find-association "philobust" LASSOC "wut") "wut")
+
+
+(define (boolean-attributes ll)
+  ; ListOfLists -> ListOfStrings
+  ; constructs a list of all the association headers in the
+  ; list-representation that are associated with boolean values.
+  ; Output is effectively a set
+  (cond
+    [(empty? ll) '()]
+    [else (create-set (deconstruct-list (first ll))
+                      (boolean-attributes (rest ll)))]))
+;checks
+(check-satisfied (list (boolean-attributes LISTOFLASSOC)
+                       (list "tweed" "diamondite")) same-set?)
+
+
+(define (deconstruct-list l)
+  ; ListOfAssociations -> ListOfStrings
+  ; constructs a list of all the association headers from a given track that
+  ; are associated with boolean values.
+  (cond
+    [(empty? l) '()]
+    [(boolean? (second (first l)))
+     (cons (first (first l)) (deconstruct-list (rest l)))]
+    [else (deconstruct-list (rest l))]))
+
+
+
+; constants for structure-based representations
 
 (define ITUNES-LOCATION "Library.xml")
 (define TODAY (create-date 2023 12 19 12 35 33))
@@ -314,6 +374,24 @@
 (define RIZZMONSTERS (list MYRULES))
 (define TUNES (list IAM ZUZZAH THANKYE MYRULES))
 
+; constants for list-based representations
+
+(define LASSOC (list (list "tweed" #f)
+                     (list "herringbone" 77)
+                     (list "diamondite" "fake!")
+                     (list "stain" TODAY)
+                     (list "tweed" "sunny")))
+(define LISTOFLASSOC (list (list (list "tweed" #f)
+                                 (list "herringbone" 77)
+                                 (list "diamondite" "fake!")
+                                 (list "stain" TODAY)
+                                 (list "tweed" "sunny"))
+                           (list (list "tweed" #f)
+                                 (list "herringbone" 77)
+                                 (list "diamondite" #t)
+                                 (list "stain" TODAY)
+                                 (list "tweed" "sunny"))))
+
 
 
 ;actions!
@@ -322,10 +400,18 @@
 
 (total-time itunes-tracks)
 
-(define albums (select-all-album-titles itunes-tracks))
+;(define albums (select-all-album-titles itunes-tracks))
   
-(length albums)
+;(length albums)
 
 ; (select-album  "The Queen Is Dead" itunes-tracks)
 
-(select-albums itunes-tracks)
+;(select-albums itunes-tracks)
+
+
+
+(define itunes-tracks/lists (read-itunes-as-lists ITUNES-LOCATION))
+
+(total-time/lists itunes-tracks/lists)
+
+(boolean-attributes itunes-tracks/lists )

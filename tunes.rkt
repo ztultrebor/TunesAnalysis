@@ -158,7 +158,7 @@
 
 (define (select-album album ltr)
   ; String ListOfTracks -> ListOfTracks
-  ; given an album title, retreive all that album's tracks in ListOfTracks
+  ; given an album title, retreive all that album's tracks from ListOfTracks
   (cond
     [(empty? ltr) '()]
     [(equal? (track-album (first ltr)) album)
@@ -166,6 +166,32 @@
     [else  (select-album album (rest ltr))]))
 ; checks
 (check-satisfied (list (select-album "Take It!" TUNES) TAKEIT) same-set?)
+
+
+(define (select-album-date album date ltr)
+  ; String Date ListOfTracks -> ListOfTracks
+  ; given an album title and a date retreive all that album's tracks
+  ; from ListOfTracks that have been played since Date
+  (cond
+    [(empty? ltr) '()]
+    [(and (equal? (track-album (first ltr)) album)
+          (since? (track-played (first ltr)) date))
+     (cons (first ltr) (select-album-date album date (rest ltr)))]
+    [else  (select-album-date album date (rest ltr))]))
+; checks
+(check-satisfied (list (select-album-date "Take It!" RANDOMDATE TUNES)
+                       (list IAM THANKYE)) same-set?)
+
+
+(define (select-albums ltr)
+  ; ListOfTracks -> ListOfListOfTracks
+  ; assembles a ListOfListOfTracks associated with a given music collection,
+  ;      one per album
+  (construct-album-track-list (select-all-album-titles ltr) ltr))
+; checks
+(check-satisfied (list (select-albums TUNES)
+                       (list TAKEIT RIZZMONSTERS)) same-set?)
+
 
 (define (total-track-time tr)
   ; Track -> Natural
@@ -207,7 +233,7 @@
 
 (define (equivalent? s1 s2)
   ; ListOfAny ListOfAny -> Boolean
-  ; determines if two lists are in fact the same set
+  ; returns #true if two lists are setwise equivalent, else #false
   (and (= (length s1) (length s2))
        (equal? s2 (create-set s1 s2))
        (equal? s1 (create-set s2 s1))))
@@ -223,14 +249,59 @@
   ; ListOfSets -> Boolean
   ; variant of equivalent? for use in check-satisfied
   (equivalent? (first los) (second los)))
+
+
+(define (since? date1 date2)
+  ; Date Date -> Boolean
+  ; returns #true if date1 occurs strictly after date2, else #false
+  (or
+   (> (date-year date1) (date-year date2))
+   (and
+    (= (date-year date1) (date-year date2))
+    (or
+     (> (date-month date1) (date-month date2))
+     (and
+      (= (date-month date1) (date-month date2))
+      (or
+       (> (date-day date1) (date-day date2))
+       (and
+        (= (date-day date1) (date-day date2))
+        (or
+         (> (date-hour date1) (date-hour date2))
+         (and
+          (= (date-hour date1) (date-hour date2))
+          (or
+           (> (date-minute date1) (date-minute date2))
+           (and
+            (= (date-minute date1) (date-minute date2))
+            (> (date-second date1) (date-second date2)))))))))))))
+(check-expect (since? TODAY MILLENNIUM) #t)
+(check-expect (since? TODAY EARLIERTODAY) #t)
+(check-expect (since? MILLENNIUM TODAY) #f)
+(check-expect (since? EARLIERTODAY TODAY) #f)
+
   
+(define (construct-album-track-list loati ltr)
+  ; ListOfStrings ListOfTracks -> ListOfListOfTracks
+  ; using a list of album titles, construct a ListOfListOfTracks,
+  ; with a ListOfTracks for each album
+  (cond
+    [(empty? loati) '()]
+    [else (cons (select-album (first loati) ltr)
+                (construct-album-track-list (rest loati) ltr))]))
+  ; checks
+  (check-satisfied (list (construct-album-track-list
+                          (list "Rizz Monsters" "Take It!") TUNES)
+                   (list TAKEIT RIZZMONSTERS)) same-set?)
 
-
+  
 ; constants
 
 (define ITUNES-LOCATION "Library.xml")
 (define TODAY (create-date 2023 12 19 12 35 33))
+(define EARLIERTODAY (create-date 2023 12 19 12 35 13))
 (define MILLENNIUM (create-date 2000 01 01 00 00 00))
+(define RANDOMDATE (create-date 2015 05 22 17 32 57))
 (define IAM (create-track "I am" "Budd" "Take It!"
                           34567 9 MILLENNIUM 567 TODAY))
 (define ZUZZAH (create-track "Zuzzah!" "Budd" "Take It!"
@@ -252,9 +323,9 @@
 (total-time itunes-tracks)
 
 (define albums (select-all-album-titles itunes-tracks))
-
-albums
   
 (length albums)
 
-(select-album  "The Queen Is Dead" itunes-tracks)
+; (select-album  "The Queen Is Dead" itunes-tracks)
+
+(select-albums itunes-tracks)

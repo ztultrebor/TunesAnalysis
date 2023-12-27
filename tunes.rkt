@@ -1,10 +1,66 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
-#reader(lib "htdp-beginner-abbr-reader.ss" "lang")((modname tunes) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #f #t none #f () #f)))
+#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname tunes) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #f #t none #f () #f)))
 (require 2htdp/itunes)
 (require 2htdp/batch-io)
 
 
+; ===========================
+; constants for structure-based representations
+
+(define ITUNES-LOCATION "Library.xml")
+(define TODAY (create-date 2023 12 19 12 35 33))
+(define EARLIERTODAY (create-date 2023 12 19 12 35 13))
+(define MILLENNIUM (create-date 2000 01 01 00 00 00))
+(define RANDOMDATE (create-date 2015 05 22 17 32 57))
+(define IAM (create-track "I am" "Budd" "Take It!"
+                          34567 9 MILLENNIUM 567 TODAY))
+(define ZUZZAH (create-track "Zuzzah!" "Budd" "Take It!"
+                             144567 12 MILLENNIUM 1 MILLENNIUM))
+(define THANKYE (create-track "Thank Ye" "Budd" "Take It!"
+                              9778 13 MILLENNIUM 177 TODAY))
+(define MYRULES (create-track "My Rules" "J17" "Rizz Monsters"
+                              10098 4 TODAY 76 TODAY))
+(define TAKEIT (list IAM ZUZZAH THANKYE))
+(define RIZZMONSTERS (list MYRULES))
+(define TUNES (list IAM ZUZZAH THANKYE MYRULES))
+
+
+; constants for list-based representations
+
+(define LASSOC (list (list "tweed" #f)
+                     (list "herringbone" 77)
+                     (list "diamondite" "fake!")
+                     (list "stain" TODAY)
+                     (list "tweed" "sunny")))
+(define LISTOFLASSOC (list (list (list "tweed" #f)
+                                 (list "herringbone" 77)
+                                 (list "diamondite" "fake!")
+                                 (list "stain" TODAY)
+                                 (list "tweed" "sunny"))
+                           (list (list "tweed" #f)
+                                 (list "herringbone" 77)
+                                 (list "diamondite" #t)
+                                 (list "stain" TODAY)
+                                 (list "tweed" "sunny"))))
+(define MYRULESLASSOC (list (list "Name" "My Rules")
+                            (list "Artist" "J17")
+                            (list "Album" "Rizz Monsters")
+                            (list "Total Time" 10098)
+                            (list "Track Number" 4)
+                            (list "Date Added" TODAY)
+                            (list "Play Count" 76)
+                            (list "Date Modified" TODAY)))
+(define SALLYSUELASSOC (list (list "Name" "Sally Sue")
+                             (list "Artist" "Budd")
+                             (list "Album" "Take It!")
+                             (list "Total Time" 22345)
+                             (list "Track Number" 8)
+                             (list "Date Added" MILLENNIUM)))
+(define LLASSOC (list MYRULESLASSOC SALLYSUELASSOC))
+
+
+; ===================================
 ; data definitions
 
 ; An LTracks is one of:
@@ -125,6 +181,7 @@
     [else ... (fn-on-natural (sub1 n))]))
 
 
+; ===============================
 ; functions on structure-based representations
 
 
@@ -133,9 +190,9 @@
   ; computes the total amount of time spent listening to a music library.
   ; Multiply number of plays by track length for each Track in the
   ; ListOfTracks and suns the total
-  (cond
-    [(empty? ltr) 0]
-    [else (+ (total-track-time (first ltr)) (total-time (rest ltr)))]))
+  (foldr
+   (lambda (tr totl) (+ (total-track-time tr) totl))
+   0 ltr))
 ; checks
 (check-expect (total-time TUNES)
               (+ (* (track-time IAM) (track-play# IAM))
@@ -159,11 +216,9 @@
 (define (select-album album ltr)
   ; String ListOfTracks -> ListOfTracks
   ; given an album title, retreive all that album's tracks from ListOfTracks
-  (cond
-    [(empty? ltr) '()]
-    [(equal? (track-album (first ltr)) album)
-     (cons (first ltr) (select-album album (rest ltr)))]
-    [else  (select-album album (rest ltr))]))
+    (filter
+     (lambda (tr) (equal? (track-album tr) album))
+     ltr))
 ; checks
 (check-satisfied (list (select-album "Take It!" TUNES) TAKEIT) same-set?)
 
@@ -172,12 +227,13 @@
   ; String Date ListOfTracks -> ListOfTracks
   ; given an album title and a date retreive all that album's tracks
   ; from ListOfTracks that have been played since Date
-  (cond
-    [(empty? ltr) '()]
-    [(and (equal? (track-album (first ltr)) album)
-          (since? (track-played (first ltr)) date))
-     (cons (first ltr) (select-album-date album date (rest ltr)))]
-    [else  (select-album-date album date (rest ltr))]))
+  (local (
+          (define (this-album? tr)
+            (equal? (track-album tr) album))
+          (define (since-date? tr)
+            (since? (track-played tr) date))
+          (define tracks-on-album (filter this-album? ltr)))
+    (filter since-date? tracks-on-album)))
 ; checks
 (check-satisfied (list (select-album-date "Take It!" RANDOMDATE TUNES)
                        (list IAM THANKYE)) same-set?)
@@ -385,61 +441,7 @@
     [else (parse-list (rest l))]))
 
 
-
-; constants for structure-based representations
-
-(define ITUNES-LOCATION "Library.xml")
-(define TODAY (create-date 2023 12 19 12 35 33))
-(define EARLIERTODAY (create-date 2023 12 19 12 35 13))
-(define MILLENNIUM (create-date 2000 01 01 00 00 00))
-(define RANDOMDATE (create-date 2015 05 22 17 32 57))
-(define IAM (create-track "I am" "Budd" "Take It!"
-                          34567 9 MILLENNIUM 567 TODAY))
-(define ZUZZAH (create-track "Zuzzah!" "Budd" "Take It!"
-                             144567 12 MILLENNIUM 1 MILLENNIUM))
-(define THANKYE (create-track "Thank Ye" "Budd" "Take It!"
-                              9778 13 MILLENNIUM 177 TODAY))
-(define MYRULES (create-track "My Rules" "J17" "Rizz Monsters"
-                              10098 4 TODAY 76 TODAY))
-(define TAKEIT (list IAM ZUZZAH THANKYE))
-(define RIZZMONSTERS (list MYRULES))
-(define TUNES (list IAM ZUZZAH THANKYE MYRULES))
-
-; constants for list-based representations
-
-(define LASSOC (list (list "tweed" #f)
-                     (list "herringbone" 77)
-                     (list "diamondite" "fake!")
-                     (list "stain" TODAY)
-                     (list "tweed" "sunny")))
-(define LISTOFLASSOC (list (list (list "tweed" #f)
-                                 (list "herringbone" 77)
-                                 (list "diamondite" "fake!")
-                                 (list "stain" TODAY)
-                                 (list "tweed" "sunny"))
-                           (list (list "tweed" #f)
-                                 (list "herringbone" 77)
-                                 (list "diamondite" #t)
-                                 (list "stain" TODAY)
-                                 (list "tweed" "sunny"))))
-(define MYRULESLASSOC (list (list "Name" "My Rules")
-                            (list "Artist" "J17")
-                            (list "Album" "Rizz Monsters")
-                            (list "Total Time" 10098)
-                            (list "Track Number" 4)
-                            (list "Date Added" TODAY)
-                            (list "Play Count" 76)
-                            (list "Date Modified" TODAY)))
-(define SALLYSUELASSOC (list (list "Name" "Sally Sue")
-                            (list "Artist" "Budd")
-                            (list "Album" "Take It!")
-                            (list "Total Time" 22345)
-                            (list "Track Number" 8)
-                            (list "Date Added" MILLENNIUM)))
-(define LLASSOC (list MYRULESLASSOC SALLYSUELASSOC))
-
-
-
+; =============================
 ;actions!
 
 ;(define itunes-tracks (read-itunes-as-tracks ITUNES-LOCATION))
@@ -452,4 +454,4 @@
 (define itunes-tracks/lists (read-itunes-as-lists ITUNES-LOCATION))
 ;(total-time/lists itunes-tracks/lists)
 ;(boolean-attributes itunes-tracks/lists)
-(llassoc-to-ltr itunes-tracks/lists)
+;(llassoc-to-ltr itunes-tracks/lists)
